@@ -20,11 +20,14 @@ const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 client.connect(err => {
     const serviceCollection = client.db("bridal-evento").collection("services");
+    const ordersCollection = client.db("bridal-evento").collection("orders");
 
     //Add Service
     app.post('/addService', (req, res) => {
         const title = req.body.title
+        const price = req.body.price
         const details = req.body.details
+        
         const fileInfo = req.files.file
         const newImg = fileInfo.data;
         const encImg = newImg.toString('base64');
@@ -33,7 +36,7 @@ client.connect(err => {
             size: fileInfo.size,
             img: Buffer.from(encImg, 'base64')
         };
-        serviceCollection.insertOne({ title, details, image })
+        serviceCollection.insertOne({ title, price, details, image })
             .then(result => {
                 res.send(result.insertedCount > 0)
             })
@@ -42,9 +45,9 @@ client.connect(err => {
     //Get services
     app.get('/services', (req, res) => {
         serviceCollection.find({})
-        .toArray((err, doc) => {
-            res.send(doc);
-        })
+            .toArray((err, doc) => {
+                res.send(doc);
+            })
     })
 
     //Delete Service
@@ -58,9 +61,18 @@ client.connect(err => {
     //Get serviceBy Id
     app.post('/services/:id', (req, res) => {
         serviceCollection.find({ _id: ObjectId(req.params.id) })
-        .toArray((err, doc) => {
-            res.send(doc);
-        })
+            .toArray((err, doc) => {
+                res.send(doc);
+            })
+    })
+
+    //Payment Done
+    app.post('/paymentDone', (req, res) => {
+        const order = req.body
+        ordersCollection.insertOne(order)
+            .then(result => {
+                res.send(result.insertedCount > 0)
+            })
     })
 });
 app.listen(process.env.PORT || port)
