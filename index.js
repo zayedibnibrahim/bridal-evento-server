@@ -54,5 +54,13 @@ client.connect(err => {
                 res.send(result.deletedCount > 0)
             })
     })
+
+    //Get serviceBy Id
+    app.post('/services/:id', (req, res) => {
+        serviceCollection.find({ _id: ObjectId(req.params.id) })
+        .toArray((err, doc) => {
+            res.send(doc);
+        })
+    })
 });
 app.listen(process.env.PORT || port)
