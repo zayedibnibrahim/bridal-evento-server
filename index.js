@@ -12,6 +12,18 @@ app.use(cors());
 app.use(bodyParser.json())
 app.use(fileUpload());
 
+//Verify JWT ADMIN Token
+
+var admin = require("firebase-admin");
+
+var serviceAccount = require("./bridal-evento-firebase-adminsdk-mvc7t-bf99d26f69.json");
+
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+});
+
+
+
 app.get('/', (req, res) => {
     res.send('Hello World!')
 })
@@ -22,6 +34,7 @@ client.connect(err => {
     const serviceCollection = client.db("bridal-evento").collection("services");
     const ordersCollection = client.db("bridal-evento").collection("orders");
     const adminCollection = client.db("bridal-evento").collection("admin");
+    const reviewCollection = client.db("bridal-evento").collection("review");
 
     //Add Service
     app.post('/addService', (req, res) => {
@@ -97,11 +110,51 @@ client.connect(err => {
 
     //All Order by person
     app.post('/allOrderByPerson/:email', (req, res) => {
+        const bearer = req.headers.authorization;
+        if (bearer && bearer.startsWith('Bearer ')) {
+            const idToken = bearer.split(' ')[1]
+            admin
+                .auth()
+                .verifyIdToken(idToken)
+                .then((decodedToken) => {
+                    const tokenEmail = decodedToken.email;
+                    const queryEmail = req.params.email
+                    if (tokenEmail == queryEmail) {
+                        ordersCollection.find({ email: queryEmail })
+                            .toArray((err, document) => {
+                                res.send(document)
+                            })
+                    }
+                    else {
+                        res.status(401).send('Unauthorized Access')
+                    }
+                })
+                .catch(error => {
+                    res.status(401).send('Unauthorized Access')
+                });
+        }
+        else {
+            res.status(401).send('Unauthorized Access')
+        }
 
-        ordersCollection.find({ email: req.params.email })
-            .toArray((err, doc) => {
-                res.send(doc)
-            })
+    })
+    //Post review
+    app.post('/review', (req, res) => {
+        const review = req.body
+        reviewCollection.insertOne(review)
+        .then(result => {
+            res.send(result.insertedCount > 0)
+        })
+    })
+
+    //Check If Admin
+    app.post('/isAdmin', (req, res) => {
+        const email = req.body.email;
+        adminCollection.find({email: email})
+        .toArray((err, admin) => {
+            res.send(admin.length > 0)
+            
+        })
     })
 });
 app.listen(process.env.PORT || port)
