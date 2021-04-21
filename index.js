@@ -74,7 +74,6 @@ client.connect(err => {
 
     //Get serviceBy Id
     app.post('/services/:id', (req, res) => {
-        console.log(req.params.id)
         serviceCollection.find({ _id: ObjectId(req.params.id) })
             .toArray((err, doc) => {
                 res.send(doc);
@@ -93,7 +92,6 @@ client.connect(err => {
     //Add Admin
     app.post('/addAdmin', (req, res) => {
         const admin = req.body
-        console.log(admin)
         adminCollection.insertOne(admin)
             .then(result => {
                 res.send(result.insertedCount > 0)
@@ -109,7 +107,7 @@ client.connect(err => {
     })
 
     //All Order by person
-    app.post('/allOrderByPerson/:email', (req, res) => {
+    app.get('/allOrderByPerson/:email', (req, res) => {
         const bearer = req.headers.authorization;
         if (bearer && bearer.startsWith('Bearer ')) {
             const idToken = bearer.split(' ')[1]
@@ -119,6 +117,7 @@ client.connect(err => {
                 .then((decodedToken) => {
                     const tokenEmail = decodedToken.email;
                     const queryEmail = req.params.email
+                    
                     if (tokenEmail == queryEmail) {
                         ordersCollection.find({ email: queryEmail })
                             .toArray((err, document) => {
