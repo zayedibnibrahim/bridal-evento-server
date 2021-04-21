@@ -21,13 +21,14 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 client.connect(err => {
     const serviceCollection = client.db("bridal-evento").collection("services");
     const ordersCollection = client.db("bridal-evento").collection("orders");
+    const adminCollection = client.db("bridal-evento").collection("admin");
 
     //Add Service
     app.post('/addService', (req, res) => {
         const title = req.body.title
         const price = req.body.price
         const details = req.body.details
-        
+
         const fileInfo = req.files.file
         const newImg = fileInfo.data;
         const encImg = newImg.toString('base64');
@@ -60,18 +61,46 @@ client.connect(err => {
 
     //Get serviceBy Id
     app.post('/services/:id', (req, res) => {
+        console.log(req.params.id)
         serviceCollection.find({ _id: ObjectId(req.params.id) })
             .toArray((err, doc) => {
                 res.send(doc);
             })
     })
 
-    //Payment Done
+    //Order Done
     app.post('/paymentDone', (req, res) => {
         const order = req.body
         ordersCollection.insertOne(order)
             .then(result => {
                 res.send(result.insertedCount > 0)
+            })
+    })
+
+    //Add Admin
+    app.post('/addAdmin', (req, res) => {
+        const admin = req.body
+        console.log(admin)
+        adminCollection.insertOne(admin)
+            .then(result => {
+                res.send(result.insertedCount > 0)
+            })
+    })
+
+    //All Order
+    app.get('/allOrder', (req, res) => {
+        ordersCollection.find({})
+            .toArray((err, doc) => {
+                res.send(doc)
+            })
+    })
+
+    //All Order by person
+    app.post('/allOrderByPerson/:email', (req, res) => {
+
+        ordersCollection.find({ email: req.params.email })
+            .toArray((err, doc) => {
+                res.send(doc)
             })
     })
 });
