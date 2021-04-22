@@ -35,6 +35,7 @@ client.connect(err => {
     const ordersCollection = client.db("bridal-evento").collection("orders");
     const adminCollection = client.db("bridal-evento").collection("admin");
     const reviewCollection = client.db("bridal-evento").collection("review");
+    const emailCollection = client.db("bridal-evento").collection("email");
 
     //Add Service
     app.post('/addService', (req, res) => {
@@ -141,26 +142,55 @@ client.connect(err => {
     app.post('/review', (req, res) => {
         const review = req.body
         reviewCollection.insertOne(review)
-        .then(result => {
-            res.send(result.insertedCount > 0)
-        })
+            .then(result => {
+                res.send(result.insertedCount > 0)
+            })
     })
 
     //Check If Admin
     app.post('/isAdmin', (req, res) => {
         const email = req.body.email;
-        adminCollection.find({email: email})
-        .toArray((err, admin) => {
-            res.send(admin.length > 0)
-            
-        })
+        adminCollection.find({ email: email })
+            .toArray((err, admin) => {
+                res.send(admin.length > 0)
+
+            })
     })
     //get all reviews
     app.get('/showReview', (req, res) => {
         reviewCollection.find({})
-        .toArray((err, review) => {
-            res.send(review)
-        })
+            .toArray((err, review) => {
+                res.send(review)
+            })
     })
+
+    //Update Status
+    app.post('/upStatus', (req, res) => {
+        const gotId = req.body.id
+        const gotStatus = req.body.upValue
+
+        ordersCollection.updateOne({ _id: ObjectId(gotId) },
+            { $set: { status: gotStatus } })
+            .then(result => {
+                res.send(result.modifiedCount > 0)
+            })
+    })
+    //send Email
+    app.post('/email', (req, res) => {
+        const email = req.body
+        emailCollection.insertOne(email)
+            .then(result => {
+                res.send(result.insertedCount > 0)
+            })
+    })
+
+    //Get Email
+    app.get('/showEmail', (req, res) => {
+        emailCollection.find({})
+            .toArray((err, mail) => {
+                res.send(mail)
+            })
+    })
+
 });
 app.listen(process.env.PORT || port)
