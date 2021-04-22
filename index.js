@@ -117,7 +117,7 @@ client.connect(err => {
                 .then((decodedToken) => {
                     const tokenEmail = decodedToken.email;
                     const queryEmail = req.params.email
-                    
+
                     if (tokenEmail == queryEmail) {
                         ordersCollection.find({ email: queryEmail })
                             .toArray((err, document) => {
@@ -153,6 +153,13 @@ client.connect(err => {
         .toArray((err, admin) => {
             res.send(admin.length > 0)
             
+        })
+    })
+    //get all reviews
+    app.get('/showReview', (req, res) => {
+        reviewCollection.find({})
+        .toArray((err, review) => {
+            res.send(review)
         })
     })
 });
