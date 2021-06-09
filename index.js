@@ -193,5 +193,5 @@ client.connect(err => {
     })
 
 });
-//index.jss
+//index.js
 app.listen(process.env.PORT || port)
